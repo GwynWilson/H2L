@@ -1,5 +1,10 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+import tensorflow as tf
 from keras.datasets import mnist
 from keras.layers import Dense
 from keras.models import Sequential
@@ -28,15 +33,19 @@ def baseline_model():
 
 
 model = baseline_model()
-model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=200, verbose=2)
+with tf.device('/gpu:0'):
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=200, verbose=2)
 scores = model.evaluate(X_test, y_test, verbose=0)
 print("Baseline Error: %.2f%%" % (100 - scores[1] * 100))
 
 for i in range(0, len(X_train)):
     image = (X_test[i] * 255).reshape((28, 28)).astype("uint8")
     dig = model.predict_classes(np.atleast_2d(X_test[i]))
+    actual = np.where(y_test[i] == 1.)[0][0]
     print('Loading image...')
-    print('Most likely fit digit is {}'.format(dig[0]))
-    print('Actual digit is {}'.format(np.where(y_test[i] == 1.)[0]), '\n')
+    print('Most likely digit is {}'.format(dig[0]))
+    print('Actual digit is {}'.format(actual, '\n'))
     plt.imshow(image, cmap=plt.get_cmap('gray'))
-    plt.show()
+    if dig[0] != actual:
+        print('\n', 'Incorrect identification detected.')
+        plt.show()
