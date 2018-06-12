@@ -16,9 +16,13 @@ which ones) are printed.
 
 os.chdir("C:\\Users\Josh\Desktop\TestSet")
 
+# Reading the image as an array.
 img = cv2.imread("Layer 2.png")
+
+# Splitting the colour channels of the original image into separate arrays.
 b, g, r = cv2.split(img)
 
+# Using fig, ax to make the interactive bit work.
 fig, ax = plt.subplots()
 plt.imshow(r)
 
