@@ -6,12 +6,16 @@ import numpy as np
 import pandas as pd
 from matplotlib.widgets import RectangleSelector
 
+plt.switch_backend('QT5Agg')
+
 """
 This script allows the reading of the test images as arrays, splits the colour
 channels, displays one of the channels using imshow. A draggable box can then
 be drawn and the coordinates of two opposite corners of the rectangle (not sure
 which ones) are printed.
 """
+
+ix = -1
 
 
 def func(filename):
@@ -22,18 +26,15 @@ def func(filename):
     # Reading the image as an array.
     img = cv2.imread("{}.png".format(filename))
 
-    # Splitting the colour channels of the original image into separate arrays.
-    b, g, r = cv2.split(img)
-
     # Using fig, ax to make the interactive bit work.
     fig, ax = plt.subplots()
-    plt.imshow(r)
+    plt.imshow(img)
 
     coords = pd.DataFrame(columns=['blx', 'bly', 'trx', 'try'])
 
-    ix = 0
-
-    def line_select_callback(eclick, erelease, ix=ix):
+    def line_select_callback(eclick, erelease):
+        global ix
+        ix += 1
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
 
@@ -42,7 +43,7 @@ def func(filename):
         coords.at[ix, 'bly'] = int(y1)
         coords.at[ix, 'trx'] = int(x2)
         coords.at[ix, 'try'] = int(y2)
-        ix += 1
+        print(ix)
         ax.add_patch(rect)
 
     rs = RectangleSelector(ax, line_select_callback,
@@ -50,9 +51,12 @@ def func(filename):
                            minspanx=5, minspany=5, spancoords='pixels',
                            interactive=True)
 
+    fig_manager = plt.get_current_fig_manager()
+    fig_manager.window.showMaximized()
     plt.show()
     os.chdir(local_repo_path + '\Data\TestCoords')
-    coords.to_csv('{}.csv'.format(filename))
+    print(coords)
+    coords.to_csv('{}.csv'.format(filename), index=False)
 
 
 func('Layer 2')
