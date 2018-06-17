@@ -10,10 +10,11 @@ This code is to take each of the individual image-coordinate pairs and bundle th
 
 local_repo_path = os.getcwd()
 
-test2 = pd.DataFrame(columns=['Identifier', 'Data'])
+test3 = {}
 
 
 def append_data(filename):
+    global test3
     os.chdir("Data/TestImages")
     img = cv2.imread("{}.png".format(filename))
     os.chdir(local_repo_path + '\Data\TestCoords')
@@ -22,19 +23,14 @@ def append_data(filename):
     # Splitting the colour channels of the original image into separate arrays.
     b, g, r = cv2.split(img)
 
-    print(b.shape)
-    print(coords)
     intermediate_b = pd.DataFrame(data=b)
     test = pd.concat([np.transpose(coords), intermediate_b], axis=1, keys=['Coords', 'Img'], join='outer', sort=True)
-    print(test)
     test = test.transpose()
-    print(test)
-    print(test.shape)
-    test2.append({'Identifier': filename, 'Data': test})
+    test3[filename] = test
+    os.chdir(local_repo_path)
 
 
-for name in os.listdir(local_repo_path + '\Data\TestImages'):
-    print(local_repo_path + '\Data\TestImages')
-    print(name)
+for name in os.listdir(local_repo_path + '\Data\TestCoords'):
     append_data(name.split('.')[0])
-print(test2)
+test4 = pd.concat(test3.values(), axis=0, keys=test3.keys(), sort=True)
+test4.to_csv(local_repo_path + '\Data\MergeDat\Ting.csv')
