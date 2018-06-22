@@ -32,5 +32,12 @@ def append_data(filename):
 
 for name in os.listdir(local_repo_path + '\Data\TestCoords'):
     append_data(name.split('.')[0])
+
 test4 = pd.concat(test3.values(), axis=0, keys=test3.keys(), sort=True)
+test4 = test4.apply(lambda x: pd.Series(x.dropna().values), 1)
+test4.columns = test4.columns[:len(test4.columns)]
+test4 = test4.reindex_axis(test4.columns, 1)
+test4 = test4.dropna(axis=1, how='all')
+print(test4)
+
 test4.to_csv(local_repo_path + '\Data\MergeDat\Ting.csv')
