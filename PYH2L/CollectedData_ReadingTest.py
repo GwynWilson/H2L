@@ -4,7 +4,9 @@ from skimage.transform import resize
 test = pd.read_csv("C:\\Users\Josh\IdeaProjects\H2L\PYH2L\Data\MergeDat\Ting.csv", engine='c')
 test = test.drop(['Unnamed: 2'], axis=1).set_index(['Unnamed: 0', 'Unnamed: 1']).rename_axis(('Source',
                                                                                               'Type'))
-
+def rebin(a, shape):
+    sh = shape[0],a.shape[0]//shape[0],shape[1],a.shape[1]//shape[1]
+    return a.reshape(sh).mean(-1).mean(1)
 
 def extract_data(layer, keepna):
     layers = test.index.levels[0]
@@ -26,10 +28,12 @@ def extract_data(layer, keepna):
         return Oriented_Img_Data, Shaped_Coords
     if keepna:
         Img_Shape = Img.xs(layer_name).shape
-        Coords_Shape = Coords.xs(layer_name).shape
+        Coords_Array_Shape_Mask = Coords.xs(layer_name).isna()
+        Coords_Shape = Coords_Array_Shape_Mask[~Coords_Array_Shape_Mask].dropna(axis=1).shape
         Imgs_Array = Img.groupby(level=0).apply(lambda x: x.values.tolist()).values
         Coords_Array = Coords.groupby(level=0).apply(lambda x: x.values.tolist()).values
         # print(np.array(Imgs_Array[layer]), '\n\n')
+        Coords_Array = [np.extract(np.logical_not(np.isnan(Coords_Array[i])), Coords_Array[i]) for i in range(0, len(Coords_Array))]
         Oriented_Img_Data = np.array(np.fliplr(np.rot90(np.array(Imgs_Array[layer]).reshape(Img_Shape).astype("uint8"), 3)))
         Shaped_Coords = np.array(np.array(Coords_Array[layer]).reshape(Coords_Shape))
         return Oriented_Img_Data, Shaped_Coords
@@ -44,6 +48,7 @@ test_coords = []
 def prepare_data():
     global train_imgs, test_imgs, train_coords, test_coords
     max_length = 0
+    max_coord_length = 0
     levels_index = list(range(0, len(test.index.levels[0])))
     train_index = levels_index[:len(levels_index)//2]
     test_index = levels_index[len(levels_index)//2:]
@@ -51,25 +56,35 @@ def prepare_data():
         img, coord = extract_data(n, True)
         coord[np.isnan(coord)] = 0
         img[np.isnan(img)] = 0
-        print(img.shape)
+        print('IMAGE SHAPE', img.shape)
+        print('COORD SHAPE', coord.shape)
         if img.shape[1] >= max_length:
             max_length = img.shape[1]
+        if coord.shape[0] >= max_coord_length:
+            max_coord_length = coord.shape[0]
         train_imgs.append(np.array(img))
         train_coords.append(np.array(coord))
     for m in test_index:
         img, coord = extract_data(m, True)
         coord[np.isnan(coord)] = 0
         img[np.isnan(img)] = 0
-        print(img.shape)
+        print('IMAGE SHAPE', img.shape)
+        print('COORD SHAPE', coord.shape)
         if img.shape[1] >= max_length:
             max_length = img.shape[1]
+        if coord.shape[0] >= max_coord_length:
+            max_coord_length = coord.shape[0]
         test_imgs.append(np.array(img))
         test_coords.append(np.array(coord))
-    print(max_length)
+    print('MAXIMUM LENGTHS', max_length, max_coord_length)
     train_imgs = [resize(train_imgs[n], (313, max_length), mode='constant', cval=0) for n in range(0, len(train_imgs))]
     test_imgs = [resize(test_imgs[n], (313, max_length), mode='constant', cval=0) for n in range(0, len(test_imgs))]
-    train_coords = [resize(train_coords[n], (313, max_length), mode='constant', cval=0) for n in range(0, len(train_coords))]
-    test_coords = [resize(test_coords[n], (313, max_length), mode='constant', cval=0) for n in range(0, len(test_coords))]
+    train_coords = [resize(train_coords[n], (4, max_coord_length), mode='constant', cval=0) for n in range(0,
+                                                                                                        len(train_coords))]
+    test_coords = [resize(test_coords[n], (4, max_coord_length), mode='constant', cval=0) for n in range(0,
+                                                                                                      len(test_coords))]
+    # train_coords = [resize(train_coords[n], (313, max_length), mode='constant', cval=0) for n in range(0, len(train_coords))]
+    # test_coords = [resize(test_coords[n], (313, max_length), mode='constant', cval=0) for n in range(0, len(test_coords))]
     print('train_imgs', np.array(train_imgs), '\n')
     print('train_coords', np.array(train_coords), '\n')
     print('test_imgs', np.array(test_imgs), '\n')

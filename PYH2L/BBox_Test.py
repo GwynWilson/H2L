@@ -1,11 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-from keras.datasets import mnist
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D, GlobalMaxPooling2D
+from keras.datasets import cifar10
 from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Dropout
+from keras.layers import Flatten, Activation
+from keras.constraints import maxnorm
+from keras.optimizers import SGD
+from keras.layers.convolutional import Conv2D, Convolution2D
+from keras.layers.convolutional import MaxPooling2D
 from keras.utils import np_utils
-from keras_preprocessing.image import ImageDataGenerator
+from keras import backend as K
+K.set_image_dim_ordering('th')
+from keras.optimizers import SGD
 import CollectedData_ReadingTest as CDRT
 
 # print(CDRT)
@@ -14,42 +22,47 @@ seed = 7
 np.random.seed(seed)
 X_train, y_train, X_test, y_test = CDRT.prepare_data()
 # print('X_train:', X_train, '\n\n\n', 'y_train:', y_train, '\n\n\n', 'X_test', X_test, '\n\n\n', 'y_test', y_test, '\n')
-print('-----------REFORMATTED DATA-----------')
-# print('X_train shape', X_train.shape, '\n')
-print(type(X_train))
-#
-# X_train = X_train[np.newaxis]
-# X_test = X_test[np.newaxis]
-# y_train = y_train[np.newaxis]
-# y_test = y_test[np.newaxis]
-X_train = X_train // 255
-X_test = X_test // 255
 
+# print(type(X_train))
+X_train = np.reshape(X_train, (6, 313, 1055, 1))
+X_test = np.reshape(X_test, (6, 313, 1055, 1))
+y_train = np.reshape(y_train, (6, 4, 11, 1))
+y_test = np.reshape(y_test, (6, 4, 11, 1))
+X_train = abs(np.round(X_train // 255, 0))
+X_test = abs(np.round(X_test // 255, 0))
+print('-----------REFORMATTED DATA-----------')
+print('X_train shape', X_train.shape, '\n')
+print('X_test shape', X_test.shape, '\n')
+print('y_train shape', y_train.shape, '\n')
+print('y_test shape', y_test.shape, '\n')
 # plt.imshow(X_train[0])
 # plt.show()
 print('X_train:', X_train, '\n\n\n', 'y_train:', y_train, '\n\n\n', 'X_test', X_test, '\n\n\n', 'y_test', y_test, '\n')
 
-model = Sequential()
-model.add(Conv2D(8, kernel_size=(3, 3),
-                 activation='relu',
-                 input_shape=(None, None, 3)))
-model.get_weights()
-model.add(Conv2D(16, (3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-model.add(GlobalMaxPooling2D())
-model.add(Dense(32, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(2, activation='softmax'))
-model.compile(loss='binary_crossentropy',optimizer='rmsprop',metrics=['accuracy'])
+filter_size = 3
+pool_size = 2
 
-train_datagen = ImageDataGenerator()
-test_datagen = ImageDataGenerator()
-train_generator = train_datagen.flow(X_train, y_train)
-validation_generator = test_datagen.flow(X_test, y_test)
+# TODO: Maybe remove pooling bc it takes away the spatial information.
+X_train = (X_train.reshape(6, -1) - np.mean(X_train)) / np.std(X_train)
+X_test = (X_test.reshape(6, -1) - np.mean(X_test)) / np.std(X_test)
+y_train = (y_train.reshape(6, -1) - np.mean(y_train)) / np.std(y_train)
+y_test = (y_test.reshape(6, -1) - np.mean(y_test)) / np.std(y_test)
+
+model = Sequential([
+    Dense(X_train.shape[-1]*4, input_dim=X_train.shape[-1]),
+    Activation('relu'),
+    Dropout(0.9),
+    Dense(y_train.shape[-1])
+    ])
+model.compile('adadelta', 'mse')
+
+print(model.summary())
+
+# y = y_train.reshape(6, -1) / img_size
+
 
 with tf.device('/gpu:0'):
-    model.fit_generator(train_generator, steps_per_epoch=1, epochs=2, validation_data=validation_generator,
-                        validation_steps=1)
-scores = model.evaluate(X_test, y_test, verbose=0)
+    model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test), verbose=0)
+scores = model.evaluate(X_test, y_test, verbose=1)
+print("Baseline Error: %.2f%%" % (100 - scores[1] * 100))
 
