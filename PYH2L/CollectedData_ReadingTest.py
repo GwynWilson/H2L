@@ -158,6 +158,9 @@ def prepare_data():
 
     test_coords2 = [resize(test_coords2[n], (313, max_length), mode='constant', cval=0) for n in range(0,
                                                                                                          len(test_coords2))]
+    """
+    This is what I hope to implement for resizing images before passing to the machine learning stage.
+    """
     # train_coords2 = [rescale(train_coords2[n], 0.5) for n in range(0, len(train_coords2))]
     # test_coords2 = [rescale(test_coords2[n], 0.5) for n in range(0, len(test_coords2))]
     # train_imgs = [rescale(train_imgs[n], 0.5) for n in range(0, len(train_imgs))]
