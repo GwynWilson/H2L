@@ -22,6 +22,7 @@ y_train = np_utils.to_categorical(y_train)
 y_test = np_utils.to_categorical(y_test)
 print('X_train:', X_train, '\n\n\n', 'y_train:', y_train, '\n\n\n', 'X_test', X_test, '\n\n\n', 'y_test', y_test, '\n')
 num_classes = y_test.shape[1]
+print(y_test.shape[1])
 
 
 def baseline_model():
