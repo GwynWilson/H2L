@@ -80,7 +80,9 @@ test_coords = []
 train_coords2 = []
 test_coords2 = []
 
-
+# TODO: Gernerate tuple of max width and height
+# TODO: Resize images to reduce resolution
+# TODO: Fix splitting of training and testing data
 def prepare_data():
     """
     Resizes all img arrays to have the same dimensions, similarly for all coord arrays. Appends the returned data of extract_data for each layer contained in

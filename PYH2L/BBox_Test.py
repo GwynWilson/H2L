@@ -32,6 +32,7 @@ Before reshaping the dimensions of the arrays are (6, 313, 1055) and (6, 4, 11).
 (Number of images, image width, image height, number of channels), where number of channels refers to colour channels (RGB etc.), however, out images are 
 greyscale so contain only one channel.
 """
+# TODO: Remove the hard coding
 print('X_train shape', X_train.shape, '\n')
 print('X_test shape', X_test.shape, '\n')
 X_train = np.reshape(X_train, (6, 313, 1055, 1))
@@ -47,7 +48,7 @@ model = Sequential([
     ])
 model.compile('adadelta', 'mse')
 
-print(model.summary())
+print(model.summary())q
 
 
 with tf.device('/gpu:0'):
