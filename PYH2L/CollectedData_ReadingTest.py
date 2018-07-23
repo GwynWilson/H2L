@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
+import os
 
-test = pd.read_csv("C:\\Users\Josh\IdeaProjects\H2L\PYH2L\Data\MergeDat\Ting.csv", engine='c')
+Ting_path = os.getcwd()+'\Data\MergeDat\Ting.csv'
+
+test = pd.read_csv(Ting_path, engine='c')
 test = test.drop(['Unnamed: 2'], axis=1).set_index(['Unnamed: 0', 'Unnamed: 1']).rename_axis(('Source',
                                                                                               'Type'))
-
 print(test)
 print(test.loc[(slice(None), 'Img'), :])
 test3 = test.loc[(slice(None), 'Img'), :]
