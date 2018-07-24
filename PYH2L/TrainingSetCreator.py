@@ -4,7 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import RectangleSelector
+from matplotlib.widgets import RectangleSelector, Cursor
 
 plt.switch_backend('QT5Agg')
 positive_response = ['Yes', 'yes', 'y', 'yeah', 'Yeah', 'Y']
@@ -18,17 +18,17 @@ which ones) are printed.
 
 ix = -1
 
+local_repo_path = os.getcwd()
+
 
 def func(filename):
     # Test images are now within repository so this line will set the correct directory as long as your local version is
     # up to date
-    local_repo_path = os.getcwd()
-    os.chdir("Data/TestImages")
 
-    def func2(filename=filename):
+    def func2(filename2=filename):
+        os.chdir("Data/TestImages")
         # Reading the image as an array.
-        img = cv2.imread("{}.png".format(filename))
-
+        img = cv2.imread("{}.png".format(filename2))
         # Using fig, ax to make the interactive bit work.
         fig, ax = plt.subplots()
         plt.imshow(img)
@@ -41,7 +41,7 @@ def func(filename):
             x1, y1 = eclick.xdata, eclick.ydata
             x2, y2 = erelease.xdata, erelease.ydata
 
-            rect = plt.Rectangle((min(x1, x2), min(y1, y2)), np.abs(x1 - x2), np.abs(y1 - y2))
+            rect = plt.Rectangle((min(x1, x2), min(y1, y2)), np.abs(x1 - x2), np.abs(y1 - y2), alpha=0.3)
             coords.at[ix, 'blx'] = int(x1)
             coords.at[ix, 'bly'] = int(y1)
             coords.at[ix, 'trx'] = int(x2)
@@ -56,18 +56,28 @@ def func(filename):
 
         fig_manager = plt.get_current_fig_manager()
         fig_manager.window.showMaximized()
+        cursor = Cursor(ax, useblit=True, color='red', linewidth=2)
         plt.show()
         os.chdir(local_repo_path + '\Data\TestCoords')
-        print(coords)
-        coords.to_csv('{}.csv'.format(filename), index=False)
+        if not coords.empty:
+            coords.to_csv('{}.csv'.format(filename2), index=False)
 
     if filename + '.csv' in os.listdir(local_repo_path + "\Data\TestCoords"):
-        check = input("Coordinate data for this image is already present. Overwrite pre-existing coordinates?")
+        check = input("Coordinate data for this image ({}) is already present. Overwrite pre-existing coordinates?".format(filename))
         if check in positive_response:
             return func2()
+        else:
+            os.chdir(local_repo_path)
+            pass
     else:
+        os.chdir(local_repo_path)
         return func2()
 
 
-func('Layer 2')
+# func('Layer 2')
+
+
+files = [os.path.splitext(filename)[0] for filename in os.listdir(local_repo_path + "\Data\TestImages")]
+for names in files:
+    func(names)
 
