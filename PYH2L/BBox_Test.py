@@ -20,7 +20,8 @@ import CollectedData_ReadingTest as CDRT
 
 seed = 7
 np.random.seed(seed)
-X_train, y_train, X_test, y_test, test_coords2, train_coords2 = CDRT.prepare_data()
+X_train, X_test, test_coords2, train_coords2, dimensions = CDRT.prepare_data()
+print(X_train.shape)
 plt.imshow(X_train[0])
 plt.imshow(train_coords2[0], alpha=0.1)
 plt.show()
@@ -35,10 +36,10 @@ greyscale so contain only one channel.
 # TODO: Remove the hard coding
 print('X_train shape', X_train.shape, '\n')
 print('X_test shape', X_test.shape, '\n')
-X_train = np.reshape(X_train, (6, 313, 1055, 1))
-X_test = np.reshape(X_test, (6, 313, 1055, 1))
-test_coords2 = np.reshape(test_coords2, (6, 313, 1055, 1))
-train_coords2 = np.reshape(train_coords2, (6, 313, 1055, 1))
+X_train = np.reshape(X_train, X_train.shape+(1,))
+X_test = np.reshape(X_test, X_test.shape+(1,))
+test_coords2 = np.reshape(test_coords2, test_coords2.shape+(1,))
+train_coords2 = np.reshape(train_coords2, train_coords2.shape+(1,))
 
 
 model = Sequential([
@@ -48,7 +49,7 @@ model = Sequential([
     ])
 model.compile('adadelta', 'mse')
 
-print(model.summary())q
+print(model.summary())
 
 
 with tf.device('/gpu:0'):
