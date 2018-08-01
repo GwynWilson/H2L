@@ -147,8 +147,8 @@ def prepare_data():
     Here skimage.transform.resize is used to carry out the transformation. The documentation for this function is online and should provide all necessary 
     insight into the function arguments used. List comprehension is used to iterate over each layer within the new array of arrays.
     """
-    train_imgs = [resize(train_imgs[n], dimensions, mode='constant', cval=0) for n in range(0, len(train_imgs))]
-    test_imgs = [resize(test_imgs[n], dimensions, mode='constant', cval=0) for n in range(0, len(test_imgs))]
+    train_imgs = [resize(train_imgs[n], dimensions, mode='constant', cval=1.) for n in range(0, len(train_imgs))]
+    test_imgs = [resize(test_imgs[n], dimensions, mode='constant', cval=1.) for n in range(0, len(test_imgs))]
     train_coords2 = [resize(train_coords2[n], dimensions, mode='constant', cval=0) for n in range(0,
                                                                                                            len(train_coords2))]
 
