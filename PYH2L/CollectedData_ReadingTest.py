@@ -74,9 +74,11 @@ Creating empty lists to use in prepare_data. As they are resized to have uniform
 supposed to a numpy array containing array objects.
 """
 train_imgs = []
+train_coords = []
 test_imgs = []
-train_coords2 = []
-test_coords2 = []
+test_coords = []
+train_boolmap = []
+test_boolmap = []
 
 # TODO: Gernerate tuple of max width and height
 # TODO: Resize images to reduce resolution
@@ -88,19 +90,19 @@ def prepare_data():
     :return: Separate training and test arrays for both imgs and coords.
     :rtype: np.array
     """
-    global train_imgs, test_imgs, train_coords2, test_coords2
+    global train_imgs, test_imgs, train_boolmap, test_boolmap, train_coords, test_coords
     max_width = 0
     max_length = 0
+    max_coord_length = 0
     levels_index = list(range(0, len(test.index.levels[0])))
-    train_index = levels_index[:len(levels_index)//2]
-    test_index = levels_index[len(levels_index)//2:]
+    train_index = levels_index[:(len(levels_index)//2)+1]
+    test_index = levels_index[(len(levels_index)//2):]
     for n in train_index:
         img, coord = extract_data(n, True)
         coord2 = np.zeros(img.shape, dtype=int)
         for x in range(0, len(coord)):
             coord2[int(coord[x][0]):int(coord[x][2]), int(coord[x][1]):int(coord[x][3])] = 1
-        coord[np.isnan(coord)] = 0
-        img[np.isnan(img)] = 0
+        img[img == 0] = 255.
         # print('IMAGE SHAPE', img.shape)
         # print('COORD SHAPE', coord.shape)
         """
@@ -114,32 +116,41 @@ def prepare_data():
             max_width = img.shape[1]
         if img.shape[0] >= max_length:
             max_length = img.shape[0]
+        if coord.shape[0] >= max_coord_length:
+            max_coord_length = coord.shape[0]
         coord2 = np.fliplr(np.rot90(coord2, 3))
         # plt.imshow(img)
         # plt.imshow(coord2, alpha=0.1)
         # plt.show()
-        train_coords2.append(coord2)
+        train_boolmap.append(coord2)
         train_imgs.append(np.array(img))
-
+        train_coords.append(coord)
     for m in test_index:
         img, coord_2 = extract_data(m, True)
         coord2 = np.zeros(img.shape, dtype=int)
         for z in range(0, len(coord_2)):
             coord2[int(coord_2[z][0]):int(coord_2[z][2]), int(coord_2[z][1]):int(coord_2[z][3])] = 1
-        coord_2[np.isnan(coord_2)] = 0
-        img[np.isnan(img)] = 0
+        img[img == 0] = 255.
         # print('IMAGE SHAPE', img.shape)
         # print('COORD SHAPE', coord_2.shape)
         if img.shape[1] >= max_width:
             max_width = img.shape[1]
         if img.shape[0] >= max_length:
             max_length = img.shape[0]
+        if coord_2.shape[0] >= max_coord_length:
+            max_coord_length = coord_2.shape[0]
         coord2 = np.fliplr(np.rot90(coord2, 3))
         # plt.imshow(img)
         # plt.imshow(coord2, alpha=0.1)
-        # plt.show()
-        test_coords2.append(coord2)
+        # plt.show()q
+        test_boolmap.append(coord2)
         test_imgs.append(np.array(img))
+        test_coords.append(coord_2)
+
+    if max_length % 2 != 0:
+        max_length +=1
+    if max_width % 2 != 0:
+        max_width +=1
     dimensions = (max_length, max_width)
     # print('TRAIN COORDS, PRE-RE-SIZING', train_coords)
     # print('MAXIMUM LENGTHS', max_width, max_coord_length)
@@ -147,27 +158,27 @@ def prepare_data():
     Here skimage.transform.resize is used to carry out the transformation. The documentation for this function is online and should provide all necessary 
     insight into the function arguments used. List comprehension is used to iterate over each layer within the new array of arrays.
     """
+    train_coords = [resize(train_coords[n], (max_coord_length, 4), mode='constant', cval=0) for n in range(0, len(train_coords))]
+    test_coords = [resize(test_coords[n], (max_coord_length, 4), mode='constant', cval=0) for n in range(0, len(test_coords))]
     train_imgs = [resize(train_imgs[n], dimensions, mode='constant', cval=1.) for n in range(0, len(train_imgs))]
     test_imgs = [resize(test_imgs[n], dimensions, mode='constant', cval=1.) for n in range(0, len(test_imgs))]
-    train_coords2 = [resize(train_coords2[n], dimensions, mode='constant', cval=0) for n in range(0,
-                                                                                                           len(train_coords2))]
+    train_boolmap = [resize(train_boolmap[n], dimensions, mode='constant', cval=0) for n in range(0, len(train_boolmap))]
 
-    test_coords2 = [resize(test_coords2[n], dimensions, mode='constant', cval=0) for n in range(0,
-                                                                                                         len(test_coords2))]
+    test_boolmap = [resize(test_boolmap[n], dimensions, mode='constant', cval=0) for n in range(0, len(test_boolmap))]
     """
     This is what I hope to implement for resizing images before passing to the machine learning stage.
     """
-    # train_coords2 = [rescale(train_coords2[n], 0.5) for n in range(0, len(train_coords2))]
-    # test_coords2 = [rescale(test_coords2[n], 0.5) for n in range(0, len(test_coords2))]
+    # train_boolmap = [rescale(train_boolmap[n], 0.5) for n in range(0, len(train_boolmap))]
+    # test_boolmap = [rescale(test_boolmap[n], 0.5) for n in range(0, len(test_boolmap))]
     # train_imgs = [rescale(train_imgs[n], 0.5) for n in range(0, len(train_imgs))]
     # test_imgs = [rescale(test_imgs[n], 0.5) for n in range(0, len(test_imgs))]
-    # for h in range(0, len(test_coords2)):
+    # for h in range(0, len(test_boolmap)):
     #     plt.imshow(test_imgs[h])
-    #     plt.imshow(test_coords2[h], alpha=0.1)
+    #     plt.imshow(test_boolmap[h], alpha=0.1)
     #     plt.show()
-    # for h in range(0, len(train_coords2)):
+    # for h in range(0, len(train_boolmap)):
     #     plt.imshow(train_imgs[h])
-    #     plt.imshow(train_coords2[h], alpha=0.1)
+    #     plt.imshow(train_boolmap[h], alpha=0.1)
     #     plt.show()
     # train_coords = [resize(train_coords[n], (313, max_width), mode='constant', cval=0) for n in range(0, len(train_coords))]
     # test_coords = [resize(test_coords[n], (313, max_width), mode='constant', cval=0) for n in range(0, len(test_coords))]
@@ -175,16 +186,18 @@ def prepare_data():
     I am rounding to reduce space. However, it is odd that at this point the arrays contain floating point values as all of the data should be integers.
     """
     train_imgs3 = np.round(np.array(train_imgs), 3)
+    train_coords3 = np.round(np.array(train_coords), 0)
     test_imgs3 = np.round(np.array(test_imgs), 3)
-    test_coords4 = np.array(test_coords2)
-    train_coords4 = np.array(train_coords2)
+    test_coords3 = np.round(np.array(test_coords), 0)
+    test_boolmap2 = np.array(test_boolmap)
+    train_boolmap2 = np.array(train_boolmap)
     # print('train_imgs', train_imgs3, '\n')
     # print('train_coords', train_coords3, '\n')
     # print('test_imgs', test_imgs3, '\n')
     # print('test_coords', test_coords3, '\n')
-    # print('train_coords4', train_coords4, '\n')
-    # print('test_coords4', test_coords4, '\n')
-    return train_imgs3, test_imgs3, test_coords4, train_coords4, dimensions
+    # print('train_boolmap2', train_boolmap2, '\n')
+    # print('test_boolmap2', test_boolmap2, '\n')
+    return train_imgs3, test_imgs3, test_boolmap2, train_boolmap2, dimensions, train_coords3, test_coords3
 
 
 prepare_data()
