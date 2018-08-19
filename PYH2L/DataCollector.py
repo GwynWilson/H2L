@@ -18,7 +18,7 @@ def append_data(filename):
     os.chdir("Data/TestImages")
     img = cv2.imread("{}.png".format(filename))
     os.chdir(local_repo_path + '\Data\TestCoords')
-    coords = pd.read_csv("{}.csv".format(filename), header=0)
+    coords = pd.read_csv("{}.csv".format(filename), header=0, engine='c')
 
     # Splitting the colour channels of the original image into separate arrays.
     b, g, r = cv2.split(img)
