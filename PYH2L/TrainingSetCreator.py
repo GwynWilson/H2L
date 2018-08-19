@@ -20,10 +20,13 @@ ix = -1
 
 local_repo_path = os.getcwd()
 
+initial_check = input("Overwrite any pre-existing coordinates?")
+
 
 def func(filename):
     # Test images are now within repository so this line will set the correct directory as long as your local version is
     # up to date
+
 
     def func2(filename2=filename):
         os.chdir("Data/TestImages")
@@ -79,5 +82,8 @@ def func(filename):
 
 files = [os.path.splitext(filename)[0] for filename in os.listdir(local_repo_path + "\Data\TestImages")]
 for names in files:
+    if names + '.csv' in os.listdir(local_repo_path + "\Data\TestCoords"):
+        if initial_check not in positive_response:
+            continue
     func(names)
 

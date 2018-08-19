@@ -55,19 +55,16 @@ test_Y_test = test_coords.reshape(test_coords.shape[0], -1)
 # train_coords2 = np.reshape(train_coords2, train_coords2.shape+(1,))
 
 
-
 model = Sequential([
     Dense(6, input_dim=test_X_train.shape[-1]),
     Activation('elu'),
     Dropout(0.6),
     Dense(test_Y_train.shape[-1], activation='sigmoid'),
-    Dropout(0.1),
+    Dropout(0.8),
     ])
 model.compile('adadelta', 'mse')
 
 
-
-#
 # model = Sequential([
 #     Dense(1, activation='sigmoid', input_shape=(shape[1], shape[2], 1)),
 #     Dropout(0.9),
@@ -79,11 +76,10 @@ print(model.summary())
 
 
 with tf.device('/gpu:0'):
-    model.fit(test_X_train, test_Y_train, epochs=500, validation_data=(test_X_test, test_Y_test), verbose=3)
+    model.fit(test_X_train, test_Y_train, epochs=1000, validation_data=(test_X_test, test_Y_test), verbose=3)
 
 # with tf.device('/gpu:0'):
 #     model.fit(X_train, train_coords2, epochs=10, validation_data=(X_test, test_coords2), verbose=3)
-
 
 
 shapearoo = test_X_test.shape
