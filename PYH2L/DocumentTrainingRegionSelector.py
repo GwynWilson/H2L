@@ -21,14 +21,17 @@ doc_path = root.filename
 
 os.chdir(doc_path)
 
+ix = -1
+
 
 def func(filename):
 
     def func2(filename2=filename):
         print(filename)
-        doc2 = pdf.convert_from_path("{}.pdf".format(filename2), 500)
-        print(doc2[0])
-        doc2[0].save("{}.png".format(filename2))
+        doc2 = pdf.convert_from_path("{}.pdf".format(filename2))
+        # print(doc2[0])
+        for page in doc2:
+            page.save("{}.png".format(filename2))
         doc = cv2.imread("{}.png".format(filename2))
         print(doc)
         fig, ax = plt.subplots()
@@ -37,7 +40,6 @@ def func(filename):
         coords = pd.DataFrame(columns=['blx', 'bly', 'trx', 'try'])
 
         TrainingRegions = []
-
         def line_select_callback(eclick, erelease):
             global ix
             ix += 1
@@ -63,12 +65,14 @@ def func(filename):
         plt.tight_layout()
         plt.show()
         for i in range(0, len(coords)):
-            TrainingRegions.append(doc[coords.at[i, 'blx']:coords.at[i, 'trx'], coords.at[i, 'bly']:coords.at[i, 'try']])
+            TrainingRegions.append(doc[coords.at[i, 'bly']:coords.at[i, 'try'], coords.at[i, 'blx']:coords.at[i, 'trx']])
         # Change from TestImagesTemp to TestImages when function is working
         os.chdir(local_repo_path + '\Data\TestImagesTemp')
         if not coords.empty:
             for j in range(0, len(TrainingRegions)):
                 sm.imsave('{}_{}.png'.format(filename2, j), TrainingRegions[j])
+        os.chdir(doc_path)
+        os.remove("{}.png".format(filename2))
     func2()
     return
 
