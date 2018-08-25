@@ -59,7 +59,7 @@ def func(filename):
 
         fig_manager = plt.get_current_fig_manager()
         fig_manager.window.showMaximized()
-        cursor = Cursor(ax, useblit=True, color='red', linewidth=2)
+        cursor = Cursor(ax, useblit=True, color='red', linewidth=1)
         plt.show()
         os.chdir(local_repo_path + '\Data\TestCoords')
         if not coords.empty:

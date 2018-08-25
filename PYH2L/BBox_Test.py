@@ -5,14 +5,14 @@ import tensorflow as tf
 from keras.models import Sequential, Model
 from keras.layers import Dense, Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Lambda
 from keras.layers import Dropout
-from keras.layers.advanced_activations import LeakyReLU
-from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-from keras.optimizers import SGD, Adam, RMSprop
-from keras.layers.merge import concatenate
+# from keras.layers.advanced_activations import LeakyReLU
+# from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+# from keras.optimizers import SGD, Adam, RMSprop
+# from keras.layers.merge import concatenate
 from keras import backend as K
 K.set_image_dim_ordering('th')
-from tensorflow.python.client import device_lib
-from keras.optimizers import SGD
+# from tensorflow.python.client import device_lib
+# from keras.optimizers import SGD
 import CollectedData_ReadingTest as CDRT
 
 
@@ -35,13 +35,15 @@ Before reshaping the dimensions of the arrays are (6, 313, 1055) and (6, 4, 11).
 greyscale so contain only one channel.
 """
 # TODO: Remove the hard coding
-X_train = np.round(X_train-0.01, 0)
-X_test = np.round(X_test-0.01, 0)
+X_train = np.round(X_train-0.17, 0)
+X_test = np.round(X_test-0.17, 0)
+X_train = np.logical_not(X_train).astype(int)
+X_test = np.logical_not(X_test).astype(int)
 test_X_train = (X_train.reshape(X_train.shape[0], -1) - np.mean(X_train)) / np.std(X_train)
 test_X_test = (X_test.reshape(X_test.shape[0], -1) - np.mean(X_test)) / np.std(X_test)
 test_Y_train = train_coords.reshape(train_coords.shape[0], -1)
 test_Y_test = test_coords.reshape(test_coords.shape[0], -1)
-
+print('Data reshaped')
 
 # shape = X_test.shape+(1,)
 # print(shape)
@@ -56,13 +58,13 @@ test_Y_test = test_coords.reshape(test_coords.shape[0], -1)
 
 
 model = Sequential([
-    Dense(6, input_dim=test_X_train.shape[-1]),
+    Dense(64, input_dim=test_X_train.shape[-1]),
     Activation('elu'),
-    Dropout(0.6),
+    Dropout(0.9),
     Dense(test_Y_train.shape[-1], activation='sigmoid'),
-    Dropout(0.8),
+    Dropout(0.2),
     ])
-model.compile('adadelta', 'mse')
+model.compile(optimizer='adadelta', loss='mse')
 
 
 # model = Sequential([
@@ -74,9 +76,11 @@ model.compile('adadelta', 'mse')
 
 print(model.summary())
 
-
+num_test_images = len(test_X_train)
 with tf.device('/gpu:0'):
-    model.fit(test_X_train, test_Y_train, epochs=1000, validation_data=(test_X_test, test_Y_test), verbose=3)
+    model.fit(test_X_train[:num_test_images//2], test_Y_train[:num_test_images//2], epochs=10, validation_data=(test_X_test[num_test_images//2:],
+                                                                                                               test_Y_test[num_test_images//2:]),
+              verbose=3)
 
 # with tf.device('/gpu:0'):
 #     model.fit(X_train, train_coords2, epochs=10, validation_data=(X_test, test_coords2), verbose=3)

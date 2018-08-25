@@ -83,6 +83,8 @@ test_boolmap = []
 # TODO: Gernerate tuple of max width and height
 # TODO: Resize images to reduce resolution
 # TODO: Fix splitting of training and testing data
+
+
 def prepare_data():
     """
     Resizes all img arrays to have the same dimensions, similarly for all coord arrays. Appends the returned data of extract_data for each layer contained in
@@ -197,6 +199,7 @@ def prepare_data():
     # print('test_coords', test_coords3, '\n')
     # print('train_boolmap2', train_boolmap2, '\n')
     # print('test_boolmap2', test_boolmap2, '\n')
+    print('Data prepared')
     return train_imgs3, test_imgs3, test_boolmap2, train_boolmap2, dimensions, train_coords3, test_coords3
 
 
