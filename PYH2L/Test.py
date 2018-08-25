@@ -55,4 +55,3 @@ for i in range(0, len(X_train)):
         print('\n', 'Incorrect identification detected.')
         plt.show()
 
-#test
