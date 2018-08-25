@@ -54,3 +54,5 @@ for i in range(0, len(X_train)):
     if dig[0] != actual:
         print('\n', 'Incorrect identification detected.')
         plt.show()
+
+#test
