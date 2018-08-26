@@ -121,9 +121,9 @@ def prepare_data():
         if coord.shape[0] >= max_coord_length:
             max_coord_length = coord.shape[0]
         coord2 = np.fliplr(np.rot90(coord2, 3))
-        # plt.imshow(img)
-        # plt.imshow(coord2, alpha=0.1)
-        # plt.show()
+        plt.imshow(img)
+        plt.imshow(coord2, alpha=0.1)
+        plt.show()
         train_boolmap.append(coord2)
         train_imgs.append(np.array(img))
         train_coords.append(coord)
@@ -142,9 +142,9 @@ def prepare_data():
         if coord_2.shape[0] >= max_coord_length:
             max_coord_length = coord_2.shape[0]
         coord2 = np.fliplr(np.rot90(coord2, 3))
-        # plt.imshow(img)
-        # plt.imshow(coord2, alpha=0.1)
-        # plt.show()q
+        plt.imshow(img)
+        plt.imshow(coord2, alpha=0.1)
+        plt.show()
         test_boolmap.append(coord2)
         test_imgs.append(np.array(img))
         test_coords.append(coord_2)

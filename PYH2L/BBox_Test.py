@@ -23,6 +23,9 @@ seed = 7
 np.random.seed(seed)
 X_train, X_test, test_coords2, train_coords2, dimensions, test_coords, train_coords = CDRT.prepare_data()
 print(X_train.shape)
+
+
+
 # plt.imshow(X_train[0])
 # plt.imshow(train_coords2[0], alpha=0.1)
 # plt.show()
