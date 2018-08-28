@@ -1,14 +1,17 @@
 import numpy as np
 import pandas as pd
-from skimage.transform import resize, rescale
+from skimage.transform import resize  # , rescale
 import os
-
 import matplotlib.pyplot as plt
+import matplotlib
 print(os.getcwd())
 # If your project is contained in the same type of IdeaProjects form as mine, this file path should work.
 test = pd.read_csv("Data\MergeDat\Ting.csv", engine='c')
 test = test.drop(['Unnamed: 2'], axis=1).set_index(['Unnamed: 0', 'Unnamed: 1']).rename_axis(('Source',
                                                                                               'Type'))
+plt.switch_backend('QT5Agg')
+
+image_debugging = input("Debug by plotting?")
 
 
 def rebin(a, shape):
@@ -43,18 +46,6 @@ def extract_data(layer, keepna):
     There are lots of steps here, none of them are particularly exciting. I don't think that I can give any more clarity in what each step does than you 
     would get from printing each step.
     """
-    if not keepna:
-        Img_Array_Shape_Mask = Img.xs(layer_name).isna()
-        Img_Shape = Img_Array_Shape_Mask[~Img_Array_Shape_Mask].dropna(axis=1).shape
-        Coords_Array_Shape_Mask = Coords.xs(layer_name).isna()
-        Coords_Shape = Coords_Array_Shape_Mask[~Coords_Array_Shape_Mask].dropna(axis=1).shape
-        Imgs_Array = Img.groupby(level=0).apply(lambda x: x.values.tolist()).values
-        Coords_Array = Coords.groupby(level=0).apply(lambda x: x.values.tolist()).values
-        Imgs_Array = [np.extract(np.logical_not(np.isnan(Imgs_Array[i])), Imgs_Array[i]) for i in range(0, len(Imgs_Array))]
-        Coords_Array = [np.extract(np.logical_not(np.isnan(Coords_Array[i])), Coords_Array[i]) for i in range(0, len(Coords_Array))]
-        Oriented_Img_Data = np.array(np.fliplr(np.rot90(np.array(Imgs_Array[layer]).reshape(Img_Shape).astype("uint8"), 3)))
-        Shaped_Coords = np.array(np.array(Coords_Array[layer]).reshape(Coords_Shape))
-        return Oriented_Img_Data, Shaped_Coords
     if keepna:
         Img_Shape = Img.xs(layer_name).shape
         Coords_Array_Shape_Mask = Coords.xs(layer_name).isna()
@@ -66,6 +57,26 @@ def extract_data(layer, keepna):
                 "uint8"), 3)))
         Shaped_Coords = np.array(np.array(Coords_Array[layer]).reshape(Coords_Shape))
         # print('SHAPED COORDS', Shaped_Coords)
+        if int(image_debugging) >= 3:
+            plt.imshow(Oriented_Img_Data)
+            plt.title('Output of extract_data')
+            plt.show()
+        return Oriented_Img_Data, Shaped_Coords
+    elif not keepna:
+        Img_Array_Shape_Mask = Img.xs(layer_name).isna()
+        Img_Shape = Img_Array_Shape_Mask[~Img_Array_Shape_Mask].dropna(axis=1).shape
+        Coords_Array_Shape_Mask = Coords.xs(layer_name).isna()
+        Coords_Shape = Coords_Array_Shape_Mask[~Coords_Array_Shape_Mask].dropna(axis=1).shape
+        Imgs_Array = Img.groupby(level=0).apply(lambda x: x.values.tolist()).values
+        Coords_Array = Coords.groupby(level=0).apply(lambda x: x.values.tolist()).values
+        Imgs_Array = [np.extract(np.logical_not(np.isnan(Imgs_Array[i])), Imgs_Array[i]) for i in range(0, len(Imgs_Array))]
+        Coords_Array = [np.extract(np.logical_not(np.isnan(Coords_Array[i])), Coords_Array[i]) for i in range(0, len(Coords_Array))]
+        Oriented_Img_Data = np.array(np.fliplr(np.rot90(np.array(Imgs_Array[layer]).reshape(Img_Shape).astype("uint8"), 3)))
+        Shaped_Coords = np.array(np.array(Coords_Array[layer]).reshape(Coords_Shape))
+        if int(image_debugging) >= 3:
+            plt.imshow(Oriented_Img_Data)
+            plt.title('Output of extract_data')
+            plt.show()
         return Oriented_Img_Data, Shaped_Coords
 
 
@@ -80,7 +91,6 @@ test_coords = []
 train_boolmap = []
 test_boolmap = []
 
-# TODO: Gernerate tuple of max width and height
 # TODO: Resize images to reduce resolution
 # TODO: Fix splitting of training and testing data
 
@@ -101,12 +111,11 @@ def prepare_data():
     test_index = levels_index[(len(levels_index)//2):]
     for n in train_index:
         img, coord = extract_data(n, True)
-        coord2 = np.zeros(img.shape, dtype=int)
-        for x in range(0, len(coord)):
-            coord2[int(coord[x][0]):int(coord[x][2]), int(coord[x][1]):int(coord[x][3])] = 1
-        img[img == 0] = 255.
-        # print('IMAGE SHAPE', img.shape)
-        # print('COORD SHAPE', coord.shape)
+        if int(image_debugging) >= 2:
+            plt.imshow(img)
+            plt.title('Input into prepare_data from extract_data')
+            plt.show()
+        img[img == 0] = 255
         """
         Checks if the current img and coord array of the loop is the largest array so far, if so notes the length (for img data) and width (for coord data). 
         The fact that length is used for img data and width is used for coord data is fairly arbitrary and very much a result of this being a work in 
@@ -120,70 +129,56 @@ def prepare_data():
             max_length = img.shape[0]
         if coord.shape[0] >= max_coord_length:
             max_coord_length = coord.shape[0]
-        coord2 = np.fliplr(np.rot90(coord2, 3))
-        plt.imshow(img)
-        plt.imshow(coord2, alpha=0.1)
-        plt.show()
-        train_boolmap.append(coord2)
+        if int(image_debugging) >= 2:
+            plt.imshow(img)
+            plt.show()
         train_imgs.append(np.array(img))
         train_coords.append(coord)
     for m in test_index:
         img, coord_2 = extract_data(m, True)
-        coord2 = np.zeros(img.shape, dtype=int)
-        for z in range(0, len(coord_2)):
-            coord2[int(coord_2[z][0]):int(coord_2[z][2]), int(coord_2[z][1]):int(coord_2[z][3])] = 1
+        if int(image_debugging) >= 2:
+            plt.imshow(img)
+            plt.title('Input into prepare_data from extract_data')
+            plt.show()
         img[img == 0] = 255.
-        # print('IMAGE SHAPE', img.shape)
-        # print('COORD SHAPE', coord_2.shape)
         if img.shape[1] >= max_width:
             max_width = img.shape[1]
         if img.shape[0] >= max_length:
             max_length = img.shape[0]
         if coord_2.shape[0] >= max_coord_length:
             max_coord_length = coord_2.shape[0]
-        coord2 = np.fliplr(np.rot90(coord2, 3))
-        plt.imshow(img)
-        plt.imshow(coord2, alpha=0.1)
-        plt.show()
-        test_boolmap.append(coord2)
         test_imgs.append(np.array(img))
         test_coords.append(coord_2)
-
     if max_length % 2 != 0:
-        max_length +=1
+        max_length += 1
     if max_width % 2 != 0:
-        max_width +=1
+        max_width += 1
     dimensions = (max_length, max_width)
-    # print('TRAIN COORDS, PRE-RE-SIZING', train_coords)
-    # print('MAXIMUM LENGTHS', max_width, max_coord_length)
-    """
-    Here skimage.transform.resize is used to carry out the transformation. The documentation for this function is online and should provide all necessary 
-    insight into the function arguments used. List comprehension is used to iterate over each layer within the new array of arrays.
-    """
-    train_coords = [resize(train_coords[n], (max_coord_length, 4), mode='constant', cval=0) for n in range(0, len(train_coords))]
-    test_coords = [resize(test_coords[n], (max_coord_length, 4), mode='constant', cval=0) for n in range(0, len(test_coords))]
-    train_imgs = [resize(train_imgs[n], dimensions, mode='constant', cval=1.) for n in range(0, len(train_imgs))]
-    test_imgs = [resize(test_imgs[n], dimensions, mode='constant', cval=1.) for n in range(0, len(test_imgs))]
-    train_boolmap = [resize(train_boolmap[n], dimensions, mode='constant', cval=0) for n in range(0, len(train_boolmap))]
-
-    test_boolmap = [resize(test_boolmap[n], dimensions, mode='constant', cval=0) for n in range(0, len(test_boolmap))]
-    """
-    This is what I hope to implement for resizing images before passing to the machine learning stage.
-    """
-    # train_boolmap = [rescale(train_boolmap[n], 0.5) for n in range(0, len(train_boolmap))]
-    # test_boolmap = [rescale(test_boolmap[n], 0.5) for n in range(0, len(test_boolmap))]
-    # train_imgs = [rescale(train_imgs[n], 0.5) for n in range(0, len(train_imgs))]
-    # test_imgs = [rescale(test_imgs[n], 0.5) for n in range(0, len(test_imgs))]
-    # for h in range(0, len(test_boolmap)):
-    #     plt.imshow(test_imgs[h])
-    #     plt.imshow(test_boolmap[h], alpha=0.1)
-    #     plt.show()
-    # for h in range(0, len(train_boolmap)):
-    #     plt.imshow(train_imgs[h])
-    #     plt.imshow(train_boolmap[h], alpha=0.1)
-    #     plt.show()
-    # train_coords = [resize(train_coords[n], (313, max_width), mode='constant', cval=0) for n in range(0, len(train_coords))]
-    # test_coords = [resize(test_coords[n], (313, max_width), mode='constant', cval=0) for n in range(0, len(test_coords))]
+    width_dif = [dimensions[0] - train_imgs[i].shape[0] for i in range(0, len(train_imgs))]
+    height_dif = [dimensions[1] - train_imgs[i].shape[1] for i in range(0, len(train_imgs))]
+    print("width_dif", width_dif)
+    print("height_dif", height_dif)
+    for i in range(0, len(train_imgs)):
+        print("width_dif", width_dif[i])
+        print("height_dif", height_dif[i])
+        train_imgs[i] = np.pad(train_imgs[i], [(1, width_dif[i]), (1, height_dif[i])], mode='constant', constant_values=255)
+    width_dif2 = [dimensions[0] - test_imgs[i].shape[0] for i in range(0, len(test_imgs))]
+    height_dif2 = [dimensions[1] - test_imgs[i].shape[1] for i in range(0, len(test_imgs))]
+    for i in range(0, len(test_imgs)):
+        test_imgs[i] = np.pad(test_imgs[i], [(1, width_dif2[i]), (1, height_dif2[i])], mode='constant', constant_values=255)
+    if int(image_debugging) >= 1:
+        for i in range(0, len(train_imgs)):
+            plt.imshow(train_imgs[i])
+            for f in range(0, len(train_coords[i])):
+                bot_left_x = min(train_coords[i][f][0], train_coords[i][f][2])#*dimensions[1]
+                bot_left_y = min(train_coords[i][f][1], train_coords[i][f][3])#*dimensions[0]
+                width = abs(train_coords[i][f][0]-train_coords[i][f][2])#*dimensions[1]
+                height = abs(train_coords[i][f][1]-train_coords[i][f][3])#*dimensions[0]
+                plt.gca().add_patch(matplotlib.patches.Rectangle((bot_left_x, bot_left_y), width,
+                                                                 height, ec='r', fc='none', lw=3))
+            fig_manager = plt.get_current_fig_manager()
+            fig_manager.window.showMaximized()
+            plt.show()
     """
     I am rounding to reduce space. However, it is odd that at this point the arrays contain floating point values as all of the data should be integers.
     """
@@ -193,13 +188,8 @@ def prepare_data():
     test_coords3 = np.round(np.array(test_coords), 0)
     test_boolmap2 = np.array(test_boolmap)
     train_boolmap2 = np.array(train_boolmap)
-    # print('train_imgs', train_imgs3, '\n')
-    # print('train_coords', train_coords3, '\n')
-    # print('test_imgs', test_imgs3, '\n')
-    # print('test_coords', test_coords3, '\n')
-    # print('train_boolmap2', train_boolmap2, '\n')
-    # print('test_boolmap2', test_boolmap2, '\n')
     print('Data prepared')
+    
     return train_imgs3, test_imgs3, test_boolmap2, train_boolmap2, dimensions, train_coords3, test_coords3
 
 

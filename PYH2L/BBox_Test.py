@@ -1,3 +1,4 @@
+import CollectedData_ReadingTest as CDRT
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
@@ -13,7 +14,6 @@ from keras import backend as K
 K.set_image_dim_ordering('th')
 # from tensorflow.python.client import device_lib
 # from keras.optimizers import SGD
-import CollectedData_ReadingTest as CDRT
 
 
 # sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
@@ -24,11 +24,10 @@ np.random.seed(seed)
 X_train, X_test, test_coords2, train_coords2, dimensions, test_coords, train_coords = CDRT.prepare_data()
 print(X_train.shape)
 
-
-
-# plt.imshow(X_train[0])
-# plt.imshow(train_coords2[0], alpha=0.1)
-# plt.show()
+for k in range(0, len(X_train)):
+    plt.imshow(X_train[k])
+    plt.imshow(train_coords2[k], alpha=0.1)
+    plt.show()
 # print('X_train:', X_train, '\n\n\n', 'y_train:', y_train, '\n\n\n', 'X_test', X_test, '\n\n\n', 'y_test', y_test, '\n')
 
 # print(type(X_train))
@@ -82,8 +81,7 @@ print(model.summary())
 num_test_images = len(test_X_train)
 with tf.device('/gpu:0'):
     model.fit(test_X_train[:num_test_images//2], test_Y_train[:num_test_images//2], epochs=10, validation_data=(test_X_test[num_test_images//2:],
-                                                                                                               test_Y_test[num_test_images//2:]),
-              verbose=3)
+                                                                                                                test_Y_test[num_test_images//2:]), verbose=3)
 
 # with tf.device('/gpu:0'):
 #     model.fit(X_train, train_coords2, epochs=10, validation_data=(X_test, test_coords2), verbose=3)
