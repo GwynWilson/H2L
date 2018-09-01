@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from skimage.transform import resize  # , rescale
 import os
 import matplotlib.pyplot as plt
 import matplotlib
@@ -115,7 +114,7 @@ def prepare_data():
             plt.imshow(img)
             plt.title('Input into prepare_data from extract_data')
             plt.show()
-        img[img == 0] = 255
+        img[img == 0] = 255.
         """
         Checks if the current img and coord array of the loop is the largest array so far, if so notes the length (for img data) and width (for coord data). 
         The fact that length is used for img data and width is used for coord data is fairly arbitrary and very much a result of this being a work in 
@@ -154,26 +153,30 @@ def prepare_data():
     if max_width % 2 != 0:
         max_width += 1
     dimensions = (max_length, max_width)
-    width_dif = [dimensions[0] - train_imgs[i].shape[0] for i in range(0, len(train_imgs))]
-    height_dif = [dimensions[1] - train_imgs[i].shape[1] for i in range(0, len(train_imgs))]
-    print("width_dif", width_dif)
-    print("height_dif", height_dif)
+
+    width_dif = [abs(dimensions[0] - train_imgs[i].shape[0]) for i in range(0, len(train_imgs))]
+    height_dif = [abs(dimensions[1] - train_imgs[i].shape[1]) for i in range(0, len(train_imgs))]
     for i in range(0, len(train_imgs)):
-        print("width_dif", width_dif[i])
-        print("height_dif", height_dif[i])
-        train_imgs[i] = np.pad(train_imgs[i], [(1, width_dif[i]), (1, height_dif[i])], mode='constant', constant_values=255)
-    width_dif2 = [dimensions[0] - test_imgs[i].shape[0] for i in range(0, len(test_imgs))]
-    height_dif2 = [dimensions[1] - test_imgs[i].shape[1] for i in range(0, len(test_imgs))]
+        train_imgs[i] = np.pad(train_imgs[i], ((1, width_dif[i]), (1, height_dif[i])), mode='constant', constant_values=255)
+
+    width_dif2 = [abs(dimensions[0] - test_imgs[i].shape[0]) for i in range(0, len(test_imgs))]
+    height_dif2 = [abs(dimensions[1] - test_imgs[i].shape[1]) for i in range(0, len(test_imgs))]
     for i in range(0, len(test_imgs)):
-        test_imgs[i] = np.pad(test_imgs[i], [(1, width_dif2[i]), (1, height_dif2[i])], mode='constant', constant_values=255)
+        test_imgs[i] = np.pad(test_imgs[i], ((1, width_dif2[i]), (1, height_dif2[i])), mode='constant', constant_values=255)
+
+    for i in range(0, len(train_coords)):
+        train_coords[i] = np.pad(train_coords[i], ((0, abs(len(train_coords[i])-max_coord_length)), (0, 0)), mode='constant', constant_values=0)
+    for i in range(0, len(test_coords)):
+        test_coords[i] = np.pad(test_coords[i], ((0, abs(len(test_coords[i])-max_coord_length)), (0, 0)), mode='constant', constant_values=0)
+
     if int(image_debugging) >= 1:
         for i in range(0, len(train_imgs)):
             plt.imshow(train_imgs[i])
             for f in range(0, len(train_coords[i])):
-                bot_left_x = min(train_coords[i][f][0], train_coords[i][f][2])#*dimensions[1]
-                bot_left_y = min(train_coords[i][f][1], train_coords[i][f][3])#*dimensions[0]
-                width = abs(train_coords[i][f][0]-train_coords[i][f][2])#*dimensions[1]
-                height = abs(train_coords[i][f][1]-train_coords[i][f][3])#*dimensions[0]
+                bot_left_x = min(train_coords[i][f][0], train_coords[i][f][2])
+                bot_left_y = min(train_coords[i][f][1], train_coords[i][f][3])
+                width = abs(train_coords[i][f][0]-train_coords[i][f][2])
+                height = abs(train_coords[i][f][1]-train_coords[i][f][3])
                 plt.gca().add_patch(matplotlib.patches.Rectangle((bot_left_x, bot_left_y), width,
                                                                  height, ec='r', fc='none', lw=3))
             fig_manager = plt.get_current_fig_manager()
@@ -183,14 +186,10 @@ def prepare_data():
     I am rounding to reduce space. However, it is odd that at this point the arrays contain floating point values as all of the data should be integers.
     """
     train_imgs3 = np.round(np.array(train_imgs), 3)
-    train_coords3 = np.round(np.array(train_coords), 0)
+    train_coords3 = np.array(train_coords)
     test_imgs3 = np.round(np.array(test_imgs), 3)
-    test_coords3 = np.round(np.array(test_coords), 0)
+    test_coords3 = np.array(test_coords)
     test_boolmap2 = np.array(test_boolmap)
     train_boolmap2 = np.array(train_boolmap)
     print('Data prepared')
-    
     return train_imgs3, test_imgs3, test_boolmap2, train_boolmap2, dimensions, train_coords3, test_coords3
-
-
-prepare_data()
