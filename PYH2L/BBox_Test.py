@@ -72,6 +72,7 @@ with tf.device('/gpu:0'):
 shapearoo = test_X_test.shape
 shapearoo2 = X_test.shape
 test = model.predict(test_X_test)
+print("Predicted bounding boxes", test)
 empty3 = []
 for y in range(0, test.shape[0]):
     empty = []
