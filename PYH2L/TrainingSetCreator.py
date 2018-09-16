@@ -24,9 +24,6 @@ initial_check = input("Overwrite any pre-existing coordinates?")
 
 
 def func(filename):
-    # Test images are now within repository so this line will set the correct directory as long as your local version is
-    # up to date
-
 
     def func2(filename2=filename):
         os.chdir("Data/TestImages")
@@ -86,4 +83,3 @@ for names in files:
         if initial_check not in positive_response:
             continue
     func(names)
-

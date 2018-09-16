@@ -198,8 +198,6 @@ pred_bboxes = pred_bboxes.reshape(len(pred_bboxes), num_objects, -1)
 pred_bboxes.shape
 
 
-
-
 plt.figure(figsize=(12, 3))
 for i_subplot in range(1, 5):
     plt.subplot(1, 4, i_subplot)
