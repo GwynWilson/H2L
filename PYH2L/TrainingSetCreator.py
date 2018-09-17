@@ -4,7 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import RectangleSelector, Cursor
+from matplotlib.widgets import RectangleSelector, Cursor, TextBox
 
 plt.switch_backend('QT5Agg')
 positive_response = ['Yes', 'yes', 'y', 'yeah', 'Yeah', 'Y']
@@ -22,7 +22,6 @@ local_repo_path = os.getcwd()
 
 initial_check = input("Overwrite any pre-existing coordinates?")
 
-
 def func(filename):
 
     def func2(filename2=filename):
@@ -33,7 +32,7 @@ def func(filename):
         fig, ax = plt.subplots()
         plt.imshow(img)
 
-        coords = pd.DataFrame(columns=['blx', 'bly', 'trx', 'try'])
+        coords = pd.DataFrame(columns=['blx', 'bly', 'trx', 'try', 'c'])
 
         def line_select_callback(eclick, erelease):
             global ix
@@ -48,11 +47,15 @@ def func(filename):
             coords.at[ix, 'try'] = int(y2)
             print(ix)
             ax.add_patch(rect)
+            clas = input('Identify object :')
+            plt.text(min(x1, x2), max(y1, y2),clas)
+            coords.at[ix,'c'] = clas
 
         rs = RectangleSelector(ax, line_select_callback,
                                drawtype='box', useblit=False, button=[1],
                                minspanx=5, minspany=5, spancoords='pixels',
                                interactive=True)
+
 
         fig_manager = plt.get_current_fig_manager()
         fig_manager.window.showMaximized()

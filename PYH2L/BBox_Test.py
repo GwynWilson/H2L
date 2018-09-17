@@ -15,7 +15,7 @@ plt.switch_backend('QT5Agg')
 seed = 7
 np.random.seed(seed)
 X_train, X_test, test_coords2, train_coords2, dimensions, train_coords, test_coords = CDRT.prepare_data()
-# print(X_train.shape)
+print(X_train)
 
 # for k in range(0, len(X_train)):
 #     plt.imshow(X_train[k])

@@ -41,6 +41,7 @@ def extract_data(layer, keepna):
     layers = test.index.levels[0]
     layer_name = layers[layer]
     Img = test.loc[(slice(None), 'Img'), :]
+    Img = Img.apply(pd.to_numeric)
     Coords = test.loc[(slice(None), 'Coords'), :]
     """
     There are lots of steps here, none of them are particularly exciting. I don't think that I can give any more clarity in what each step does than you 
@@ -52,10 +53,9 @@ def extract_data(layer, keepna):
         Coords_Shape = Coords_Array_Shape_Mask[~Coords_Array_Shape_Mask].dropna(axis=1).shape
         Imgs_Array = Img.groupby(level=0).apply(lambda x: x.values.tolist()).values
         Coords_Array = Coords.groupby(level=0).apply(lambda x: x.values.tolist()).values
-        Coords_Array = [np.extract(np.logical_not(np.isnan(Coords_Array[i])), Coords_Array[i]) for i in range(0, len(Coords_Array))]
+        Shaped_Coords = np.array([i[0][:5] for i in Coords_Array])
         Oriented_Img_Data = np.array(np.fliplr(np.rot90(np.array(Imgs_Array[layer]).reshape(Img_Shape).astype(
                 "uint8"), 3)))
-        Shaped_Coords = np.array(np.array(Coords_Array[layer]).reshape(Coords_Shape))
         # print('SHAPED COORDS', Shaped_Coords)
         if int(image_debugging) >= 3:
             plt.imshow(Oriented_Img_Data)
@@ -70,7 +70,7 @@ def extract_data(layer, keepna):
         Imgs_Array = Img.groupby(level=0).apply(lambda x: x.values.tolist()).values
         Coords_Array = Coords.groupby(level=0).apply(lambda x: x.values.tolist()).values
         Imgs_Array = [np.extract(np.logical_not(np.isnan(Imgs_Array[i])), Imgs_Array[i]) for i in range(0, len(Imgs_Array))]
-        Coords_Array = [np.extract(np.logical_not(np.isnan(Coords_Array[i])), Coords_Array[i]) for i in range(0, len(Coords_Array))]
+        Coords_Array = [np.extract(np.logical_not(np.isnan(Coords_Array[type(Coords_Array) != "string"][i])), Coords_Array[i]) for i in range(0, len(Coords_Array))]
         Oriented_Img_Data = np.array(np.fliplr(np.rot90(np.array(Imgs_Array[layer]).reshape(Img_Shape).astype("uint8"), 3)))
         Shaped_Coords = np.array(np.array(Coords_Array[layer]).reshape(Coords_Shape))
         if int(image_debugging) >= 3:
